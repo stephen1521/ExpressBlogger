@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { validateBlogData } = require("../validation/blogs");
 
 const blogs = [
     {
@@ -77,6 +78,85 @@ router.delete('/single/:title', (req, res) => {
         success: true,
         message: `Blog titled ${blogToDelete} has been deleted`
     })
+})
+
+router.post('/create-one', (req, res) => {
+    try {
+        const blogToBeAdded = {};
+        blogToBeAdded.title = req.body.title;
+        blogToBeAdded.text = req.body.text;
+        blogToBeAdded.author = req.body.author;
+        blogToBeAdded.category = req.body.category;
+        blogToBeAdded.createdAt = new Date();
+        blogToBeAdded.lastModified = new Date();
+        const validation = validateBlogData(blogToBeAdded);
+        if(!validation.isValid){
+            throw new Error(validation.message)
+        }
+        blogs.push(blogToBeAdded);
+        res.json({
+            success: true,
+            message: `Blog titled ${blogToBeAdded.title} has been created`
+        })
+    } catch (e) {
+        console.log(e)
+        res.json({
+            success: false,
+            message: String(e)
+        })
+    }
+})
+
+router.put('/update-one/:title', (req, res) => {
+    try {
+        const newBlog = {}
+        const oldBlog = blogs.find(blog => {
+            return blog.title === req.params.title;
+        })
+        if(!oldBlog){
+            throw new Error("Title could not be found");
+        }
+        if(req.body.title !== undefined){
+            newBlog.title = req.body.title;
+        } else {
+            newBlog.title = oldBlog.title;
+        }
+        if(req.body.text !== undefined){
+            newBlog.text = req.body.text;
+        } else {
+            newBlog.text = oldBlog.text;
+        }
+        if(req.body.author !== undefined){
+            newBlog.author = req.body.author;
+        } else {
+            newBlog.author = oldBlog.author;
+        }
+        if(req.body.category !== undefined){
+            newBlog.category = req.body.category;
+        } else {
+            newBlog.category = oldBlog.category;
+        }
+        newBlog.createdAt = oldBlog.createdAt;
+        newBlog.lastModified = new Date();
+        const validation = validateBlogData(newBlog);
+        if(!validation.isValid){
+            throw new Error(validation.message)
+        }
+        const oldBlogIndex = blogs.findIndex(blog => blog.title === req.params.title);
+        blogs[oldBlogIndex] = newBlog;
+        res.json({
+            success: true,
+            message: `The blog titled ${oldBlog.title} has been updated`
+        })
+    } catch (e) {
+        console.log(e);
+        res.json({
+            success: false,
+            massage: String(e)
+        })
+    }
+
+
 })
 
 module.exports = router;
