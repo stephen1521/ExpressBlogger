@@ -55,29 +55,154 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/all', (req, res) => {
-    res.json({
-        success: true,
-        blogsList: blogs
-    })
+    try{
+        if(req.query.title !== undefined){
+            const allTitles = blogs.map(blog => blog.title)
+            res.status(200).json({
+                success: true, 
+                allTitles: allTitles
+            })
+            return;
+        }
+        if(req.query.text !== undefined){
+            const allTexts = blogs.map(blog => blog.text)
+            res.status(200).json({
+                succes: true,
+                allTexts: allTexts
+            })
+            return;
+        }
+        if(req.query.author !== undefined){
+            const allAuthors = blogs.map(blog => blog.author)
+            res.status(200).json({
+                success: true,
+                allAuthors: allAuthors
+            })
+            return;
+        }
+        if(req.query.category !== undefined){
+            const allCategory = blogs.map(blog => blog.category)
+            res.status(200).json({
+                success: true,
+                allCategory: allCategory
+            })
+            return;
+        }
+        if(req.query.createdAt !== undefined){
+            const allCreatedAt = blogs.map(blog => blog.createdAt)
+            res.status(200).json({
+                succces: true,
+                allCreatedAt: allCreatedAt
+            })
+            return;
+        }
+        if(req.query.lastModified !== undefined){
+            const allLastModified = blogs.map(blog => blog.lastModified)
+            res.status(200).json({
+                success: true,
+                allLastModified: allLastModified
+            })
+            return;
+        }
+        if(Object.keys(req.query).length > 0){
+            throw new Error('Query could not be found');
+        }
+        res.status(200).json({
+            success: true,
+            blogsList: blogs
+        })
+    } catch(e) {
+        res.status(404).json({
+            success: false,
+            message: String(e)
+        })
+    }
 })
 
 router.get('/single/:title', (req, res) => {
-    const blogToFind = req.params.title;
-    const foundBlog = blogs.filter(blog => blog.title === blogToFind);
-    res.json({
-        success: true,
-        blogSearchedFor: foundBlog
-    })
+    try{
+        const blogToFind = req.params.title;
+        const foundBlog = blogs.filter(blog => {
+            return blog.title === blogToFind;
+        });
+        if(foundBlog.length === 0){
+            throw new Error('Title could not be found');
+        }
+        if(req.query.title !== undefined){
+            res.status(200).json({
+                success: true, 
+                title: foundBlog[0].title
+            })
+            return;
+        }
+        if(req.query.text !== undefined){
+            res.status(200).json({
+                succes: true,
+                text: foundBlog[0].text
+            })
+            return;
+        }
+        if(req.query.author !== undefined){
+            res.status(200).json({
+                success: true,
+                author: foundBlog[0].author
+            })
+            return;
+        }
+        if(req.query.category !== undefined){
+            res.status(200).json({
+                success: true,
+                catefory: foundBlog[0].category
+            })
+            return;
+        }
+        if(req.query.createdAt !== undefined){
+            res.status(200).json({
+                succces: true,
+                createdAt: foundBlog[0].createdAt
+            })
+            return;
+        }
+        if(req.query.lastModified !== undefined){
+            res.status(200).json({
+                success: true,
+                lastModified: foundBlog[0].lastModified
+            })
+            return;
+        }
+        if(Object.keys(req.query).length > 0){
+            throw new Error('Query could not be found');
+        }
+        res.status(200).json({
+            success: true,
+            blogSearchedFor: foundBlog
+        })
+    } catch (e) {
+        res.status(404).json({
+            success: false,
+            message: String(e)
+        })
+    }
 })
 
 router.delete('/single/:title', (req, res) => {
-    const blogToDelete = req.params.title;
-    const foundBlog = blogs.findIndex(blog => blog.title === blogToDelete);
-    blogs.splice(foundBlog, 1);
-    res.json({
-        success: true,
-        message: `Blog titled ${blogToDelete} has been deleted`
-    })
+    try{
+        const blogToDelete = req.params.title;
+        const foundBlog = blogs.findIndex(blog => blog.title === blogToDelete);
+        if(foundBlog === -1){
+            throw new Error('Title could not be found');
+        }
+        blogs.splice(foundBlog, 1);
+        res.status(200).json({
+            success: true,
+            message: `Blog titled ${blogToDelete} has been deleted`
+        })
+    } catch(e) {
+        res.status(404).json({
+            succes: false,
+            message: String(e)
+        })
+    }
 })
 
 router.post('/create-one', (req, res) => {
@@ -94,13 +219,12 @@ router.post('/create-one', (req, res) => {
             throw new Error(validation.message)
         }
         blogs.push(blogToBeAdded);
-        res.json({
+        res.status(201).json({
             success: true,
             message: `Blog titled ${blogToBeAdded.title} has been created`
         })
     } catch (e) {
-        console.log(e)
-        res.json({
+        res.status(400).json({
             success: false,
             message: String(e)
         })
@@ -144,19 +268,22 @@ router.put('/update-one/:title', (req, res) => {
         }
         const oldBlogIndex = blogs.findIndex(blog => blog.title === req.params.title);
         blogs[oldBlogIndex] = newBlog;
-        res.json({
+        res.status(200).json({
             success: true,
             message: `The blog titled ${oldBlog.title} has been updated`
         })
     } catch (e) {
-        console.log(e);
-        res.json({
+        if(e.message === 'Title could not be found'){
+            res.status(404).json({
+                success: false,
+                message: String(e)
+            })
+        }
+        res.status(400).json({
             success: false,
-            massage: String(e)
+            message: String(e)
         })
     }
-
-
 })
 
 module.exports = router;

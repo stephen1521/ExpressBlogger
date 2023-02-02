@@ -18,6 +18,12 @@ const validateBlogData = (blogData) => {
         }
     }
     if(blogData.category !== undefined && blogData.category.length > 0){
+        if(!Array.isArray(blogData.category)){
+            return {
+                isValid: false,
+                message: 'Category must be an array'
+            }
+        }
         if(blogData.category.length > 10){
             return {
                 isValid: false,
