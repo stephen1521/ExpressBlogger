@@ -1,61 +1,68 @@
 const express = require('express');
 const router = express.Router();
 const { validateBlogData } = require("../validation/blogs");
-
-const blogs = [
-    {
-        title: "dicta",
-        text: "Iusto et in et. Nulla accusantium fugit. Et qui dolorem inventore soluta et veritatis. Aut ut aut non laudantium eveniet suscipit odit. Sapiente sint nihil nihil sit et molestias. In nisi omnis quas et sed aut minus aperiam ea.\n \rLaudantium quo quisquam quae. Et et quas officia perspiciatis iusto sunt sunt eaque. Quidem sit voluptas deserunt sequi magni.\n \rEst est facere cumque ipsam omnis animi. Voluptatem magnam officiis architecto possimus. Quia similique aut eos qui. Quasi quae sed aliquam.",
-        author: "Darren Abbott",
-        category: ["Lorem", "sit", "amet"],
-        createdAt: "2022-03-22T10:36:37.176Z",
-        lastModified: "2022-03-22T10:36:37.176Z",
-    },
-    {
-        title: "ducimus",
-        text: "Placeat ea et fuga. Qui itaque quibusdam nam. Maxime nobis quam. Et laudantium sunt incidunt reiciendis.\n \rEarum aut sed omnis autem aliquam architecto corporis sint. Nostrum cumque voluptatem aperiam alias similique. Tenetur et esse omnis praesentium ipsum alias. Impedit rerum qui quia quaerat architecto mollitia est autem. Qui blanditiis earum et qui dolorum reprehenderit. Debitis est temporibus.\n \rEt nam sed. Corporis ut rerum. Ut qui dolore est dolorem ex.",
-        author: "Luke Rogahn PhD",
-        category: ["Lorem", "ipsum"],
-        createdAt: "2022-03-22T15:16:56.285Z",
-        lastModified: "2022-03-22T15:16:56.285Z",
-    },
-    {
-        title: "quod",
-        text: "Accusamus nisi eos. Tenetur earum tenetur nemo. Qui voluptas temporibus repellendus maxime. Ipsum optio voluptate enim nihil. Ea et dolorem. Omnis unde perspiciatis.\n \rUt odio eaque. Harum non placeat. Eveniet molestiae in cupiditate dolor doloremque rerum eligendi aut ab.\n \rMolestias eligendi et. Nemo velit natus autem numquam atque provident et nulla. In et dolores ad nihil. Delectus quis doloremque asperiores similique. Asperiores id nam vitae nobis labore autem. Dolor aperiam provident quia consectetur aut ut.",
-        author: "Maryann Schneider",
-        category: ["Lorem", "ipsum", "dolor", "sit", "amet"],
-        createdAt: "2022-03-21T20:09:32.298Z",
-        lastModified: "2022-03-21T20:09:32.298Z",
-    },
-    {
-        title: "ut",
-        text: "Itaque necessitatibus repudiandae. Porro suscipit exercitationem qui atque. Perferendis suscipit debitis sint aut dignissimos nobis ut. Modi ea nihil est vel consequuntur voluptatem. In magnam delectus in eos reiciendis sit est enim eligendi. Sint dicta at.\n \rConsectetur aspernatur alias sed non explicabo blanditiis laborum fugit voluptate. Reiciendis iste aut sit natus qui et in ratione. Placeat qui in voluptatum autem nulla ratione. Commodi sit alias sint sapiente rem. Quia sapiente minus deleniti vitae.\n \rExercitationem numquam omnis maxime dolorum sed deserunt suscipit laudantium. Ad et autem voluptatem esse laudantium et. Id fuga accusamus est sapiente dicta.",
-        author: "Dr. Lorenzo Anderson",
-        category: ["ipsum", "dolor", "sit", "amet"],
-        createdAt: "2022-03-21T23:07:53.447Z",
-        lastModified: "2022-03-21T23:07:53.447Z",
-    },
-    {
-        title: "id",
-        text: "Porro officia aliquid fugiat sed reprehenderit illo amet doloribus sed. Molestiae vero et. Quae voluptates dolores. Voluptatem facere fuga. Veniam perferendis illo ut sunt earum deleniti.\n \rIusto neque dolorem esse error. Saepe et quia ut corrupti. Autem repellendus similique dolorem sunt in ipsa perferendis. Et excepturi ut voluptatem deserunt accusantium dolores aperiam cum ut.\n \rDoloremque expedita sit et voluptatem unde libero. Numquam beatae sed repellat iusto doloribus fugit tenetur. Possimus et ut adipisci harum voluptatem provident consequatur. Corporis quo aut vel itaque blanditiis illum.",
-        author: "Bobbie Dach",
-        category: ["amet"],
-        createdAt: "2022-03-22T15:14:39.819Z",
-        lastModified: "2022-03-22T15:14:39.819Z",
-    }
-]
+const { db } = require('../mongo');
+const { ObjectId } = require('mongodb');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.json({
-    success: true,
-    route: "blogs",
-    message: "Welcome to blogs page"
-  });
+router.get('/', async function(req, res, next) {
+    const blogsPulled = await db()
+    .collection('sample_Blogs')
+    .find({})
+    .limit(5)
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blogs")
+        } else {
+          res.json(result);
+        }
+      }); 
+    res.json({
+    sucess:true,
+    blogs: blogsPulled
+    });
 });
 
-router.get('/all', (req, res) => {
+// returns 1 blog randomly from the db
+router.get('/get-one', async function(req, res, next) {
+    const blogsPulled = await db()
+    .collection('sample_Blogs')
+    .aggregate([{$sample : {size: 1}}])
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blogs")
+        } else {
+          res.json(result);
+        }
+      }); 
+    res.json({
+    sucess:true,
+    blogs: blogsPulled
+    });
+});
+
+//get all blogs, if query is not undefined then 
+// get all blogs info appropriate to the query
+router.get('/all', async (req, res) => {
+    const blogs = await db()
+    .collection('sample_Blogs')
+    .find({})
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blogs")
+        } else {
+          res.json(result);
+        }
+      }); 
     try{
+        if(req.query._id !== undefined){
+            const allIds = blogs.map(blog => blog._id)
+            res.status(200).json({
+                success: true,
+                allIds: allIds
+            })
+            return;
+        }
         if(req.query.title !== undefined){
             const allTitles = blogs.map(blog => blog.title)
             res.status(200).json({
@@ -80,8 +87,8 @@ router.get('/all', (req, res) => {
             })
             return;
         }
-        if(req.query.category !== undefined){
-            const allCategory = blogs.map(blog => blog.category)
+        if(req.query.categories !== undefined){
+            const allCategory = blogs.map(blog => blog.categories)
             res.status(200).json({
                 success: true,
                 allCategory: allCategory
@@ -119,54 +126,63 @@ router.get('/all', (req, res) => {
     }
 })
 
-router.get('/single/:title', (req, res) => {
+// get single blog by title, if query is not undefined then get 
+// info appropriate to the query
+router.get('/single/:title', async (req, res) => {
+    const title = req.params.title;
+    const blog = await db()
+    .collection('sample_Blogs')
+    .find({"title" : String(title)})
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blog")
+        } else {
+          res.json(result);
+        }
+    });
     try{
-        const blogToFind = req.params.title;
-        const foundBlog = blogs.filter(blog => {
-            return blog.title === blogToFind;
-        });
-        if(foundBlog.length === 0){
-            throw new Error('Title could not be found');
+        if(blog.length < 1){
+            throw new Error('Could not find title');
         }
         if(req.query.title !== undefined){
             res.status(200).json({
                 success: true, 
-                title: foundBlog[0].title
+                title: blog[0].title
             })
             return;
         }
         if(req.query.text !== undefined){
             res.status(200).json({
                 succes: true,
-                text: foundBlog[0].text
+                text: blog[0].text
             })
             return;
         }
         if(req.query.author !== undefined){
             res.status(200).json({
                 success: true,
-                author: foundBlog[0].author
+                author: blog[0].author
             })
             return;
         }
-        if(req.query.category !== undefined){
+        if(req.query.categories !== undefined){
             res.status(200).json({
                 success: true,
-                catefory: foundBlog[0].category
+                catefory: blog[0].categories
             })
             return;
         }
         if(req.query.createdAt !== undefined){
             res.status(200).json({
                 succces: true,
-                createdAt: foundBlog[0].createdAt
+                createdAt: blog[0].createdAt
             })
             return;
         }
         if(req.query.lastModified !== undefined){
             res.status(200).json({
                 success: true,
-                lastModified: foundBlog[0].lastModified
+                lastModified: blog[0].lastModified
             })
             return;
         }
@@ -175,7 +191,7 @@ router.get('/single/:title', (req, res) => {
         }
         res.status(200).json({
             success: true,
-            blogSearchedFor: foundBlog
+            blogSearchedFor: blog
         })
     } catch (e) {
         res.status(404).json({
@@ -185,17 +201,31 @@ router.get('/single/:title', (req, res) => {
     }
 })
 
-router.delete('/single/:title', (req, res) => {
-    try{
-        const blogToDelete = req.params.title;
-        const foundBlog = blogs.findIndex(blog => blog.title === blogToDelete);
-        if(foundBlog === -1){
-            throw new Error('Title could not be found');
+//delete single blog post by title
+router.delete('/single/:title', async (req, res) => {
+    let title = req.params.title;
+    const blogToBeDeleted = await db()
+    .collection('sample_Blogs')
+    .find({'title' : String(title)})
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blog")
+        } else {
+          res.json(result);
         }
-        blogs.splice(foundBlog, 1);
+    });
+    try{
+        if(blogToBeDeleted.length < 1){
+            throw new Error('Error title could not be found');
+        }
+        db()
+        .collection('sample_Blogs')
+        .deleteOne({
+            "title" : String(title)
+        })
         res.status(200).json({
             success: true,
-            message: `Blog titled ${blogToDelete} has been deleted`
+            message: `Blog titled ${title} has been deleted`
         })
     } catch(e) {
         res.status(404).json({
@@ -205,6 +235,7 @@ router.delete('/single/:title', (req, res) => {
     }
 })
 
+// create one blog post and put it into the db
 router.post('/create-one', (req, res) => {
     try {
         const blogToBeAdded = {};
@@ -218,7 +249,9 @@ router.post('/create-one', (req, res) => {
         if(!validation.isValid){
             throw new Error(validation.message)
         }
-        blogs.push(blogToBeAdded);
+        db()
+        .collection('sample_Blogs')
+        .insertOne(blogToBeAdded);
         res.status(201).json({
             success: true,
             message: `Blog titled ${blogToBeAdded.title} has been created`
@@ -231,46 +264,64 @@ router.post('/create-one', (req, res) => {
     }
 })
 
-router.put('/update-one/:title', (req, res) => {
+// update one blog post in the db based off of title
+router.put('/update-one/:title', async (req, res) => {
+    const title = req.params.title;
+    const oldBlog = await db()
+    .collection('sample_Blogs')
+    .find({"title" : String(title)})
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blog")
+        } else {
+          res.json(result);
+        }
+    });
     try {
-        const newBlog = {}
-        const oldBlog = blogs.find(blog => {
-            return blog.title === req.params.title;
-        })
-        if(!oldBlog){
+        const newBlog = {};
+        if(oldBlog.length < 1){
             throw new Error("Title could not be found");
         }
         if(req.body.title !== undefined){
             newBlog.title = req.body.title;
         } else {
-            newBlog.title = oldBlog.title;
+            newBlog.title = oldBlog[0].title;
         }
         if(req.body.text !== undefined){
             newBlog.text = req.body.text;
         } else {
-            newBlog.text = oldBlog.text;
+            newBlog.text = oldBlog[0].text;
         }
         if(req.body.author !== undefined){
             newBlog.author = req.body.author;
         } else {
-            newBlog.author = oldBlog.author;
+            newBlog.author = oldBlog[0].author;
         }
-        if(req.body.category !== undefined){
-            newBlog.category = req.body.category;
+        if(req.body.categories !== undefined){
+            newBlog.categories = req.body.categories;
         } else {
-            newBlog.category = oldBlog.category;
+            newBlog.categories = oldBlog[0].categories;
         }
-        newBlog.createdAt = oldBlog.createdAt;
+        newBlog.createdAt = oldBlog[0].createdAt;
         newBlog.lastModified = new Date();
         const validation = validateBlogData(newBlog);
         if(!validation.isValid){
             throw new Error(validation.message)
         }
-        const oldBlogIndex = blogs.findIndex(blog => blog.title === req.params.title);
-        blogs[oldBlogIndex] = newBlog;
+        db()
+        .collection('sample_Blogs')
+        .updateOne(
+            {"title" : String(title)},
+            { $set: {"title": String(newBlog.title)}},
+            { $set: {"text": String(newBlog.text)}},
+            { $set: {"author": String(newBlog.author)}},
+            { $set: {"categories": Array(newBlog.categories)}},
+            { $set: {"createdAt": Date(newBlog.createdAt)}},
+            { $set: {"title": Date(newBlog.lastModified)}},
+        )
         res.status(200).json({
             success: true,
-            message: `The blog titled ${oldBlog.title} has been updated`
+            message: `The blog titled ${oldBlog[0].title} has been updated`
         })
     } catch (e) {
         if(e.message === 'Title could not be found'){
@@ -278,8 +329,85 @@ router.put('/update-one/:title', (req, res) => {
                 success: false,
                 message: String(e)
             })
+            return;
         }
         res.status(400).json({
+            success: false,
+            message: String(e)
+        })
+    }
+})
+
+// get single blog by id, if query is not undefined then get 
+// info appropriate to the query
+router.get('/get-one/:id', async (req, res) => {
+    const id = req.params.id;
+    const o_id = new ObjectId(id);
+    const blog = await db()
+    .collection('sample_Blogs')
+    .find({_id: o_id})
+    .toArray(function(err, result){
+        if (err) {
+          res.status(400).send("error fetching blog")
+        } else {
+          res.json(result);
+        }
+    });
+    try{
+        if(blog.length < 1){
+            throw new Error('Could not find id');
+        }
+        if(req.query.title !== undefined){
+            res.status(200).json({
+                success: true, 
+                title: blog[0].title
+            })
+            return;
+        }
+        if(req.query.text !== undefined){
+            res.status(200).json({
+                succes: true,
+                text: blog[0].text
+            })
+            return;
+        }
+        if(req.query.author !== undefined){
+            res.status(200).json({
+                success: true,
+                author: blog[0].author
+            })
+            return;
+        }
+        if(req.query.categories !== undefined){
+            res.status(200).json({
+                success: true,
+                catefory: blog[0].categories
+            })
+            return;
+        }
+        if(req.query.createdAt !== undefined){
+            res.status(200).json({
+                succces: true,
+                createdAt: blog[0].createdAt
+            })
+            return;
+        }
+        if(req.query.lastModified !== undefined){
+            res.status(200).json({
+                success: true,
+                lastModified: blog[0].lastModified
+            })
+            return;
+        }
+        if(Object.keys(req.query).length > 0){
+            throw new Error('Query could not be found');
+        }
+        res.status(200).json({
+            success: true,
+            blogSearchedFor: blog
+        })
+    } catch (e) {
+        res.status(404).json({
             success: false,
             message: String(e)
         })

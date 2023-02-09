@@ -8,6 +8,13 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const blogsRouter = require('./routes/blogs');
 
+
+//loads the contents of config.env
+require("dotenv").config({path: './config.env'});
+
+const { mongoConnect } = require('./mongo.js');
+mongoConnect();
+
 const app = express();
 
 // view engine setup
