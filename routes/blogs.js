@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const express = require('express');
 const router = express.Router();
 const { validateBlogData } = require("../validation/blogs");
@@ -55,7 +56,7 @@ router.get('/all', async (req, res) => {
         }
       }); 
     try{
-        if(req.query._id !== undefined){
+        if(req.query.id !== undefined){
             const allIds = blogs.map(blog => blog._id)
             res.status(200).json({
                 success: true,
@@ -245,6 +246,7 @@ router.post('/create-one', (req, res) => {
         blogToBeAdded.category = req.body.category;
         blogToBeAdded.createdAt = new Date();
         blogToBeAdded.lastModified = new Date();
+        blogToBeAdded.id = uuidv4();
         const validation = validateBlogData(blogToBeAdded);
         if(!validation.isValid){
             throw new Error(validation.message)
@@ -304,6 +306,7 @@ router.put('/update-one/:title', async (req, res) => {
         }
         newBlog.createdAt = oldBlog[0].createdAt;
         newBlog.lastModified = new Date();
+        newBlog.id = oldBlog[0].id;
         const validation = validateBlogData(newBlog);
         if(!validation.isValid){
             throw new Error(validation.message)
@@ -317,7 +320,7 @@ router.put('/update-one/:title', async (req, res) => {
             { $set: {"author": String(newBlog.author)}},
             { $set: {"categories": Array(newBlog.categories)}},
             { $set: {"createdAt": Date(newBlog.createdAt)}},
-            { $set: {"title": Date(newBlog.lastModified)}},
+            { $set: {"lastModified": Date(newBlog.lastModified)}},
         )
         res.status(200).json({
             success: true,
