@@ -12,8 +12,10 @@ const blogsRouter = require('./routes/blogs');
 //loads the contents of config.env
 require("dotenv").config({path: './config.env'});
 
-const { mongoConnect } = require('./mongo.js');
-mongoConnect();
+// const { mongoConnect } = require('./mongo.js');
+// mongoConnect();
+const { mongooseConnect } = require('./mongoose.js')
+mongooseConnect();
 
 const app = express();
 
@@ -29,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/blogs', blogsRouter);
+// app.use('/blogs', blogsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,0 +1,41 @@
+//was mongo.js
+// const { MongoClient } = require("mongodb");
+
+// let database;
+// async function mongoConnect() {
+// 	// Connection URI
+// 	const uri = process.env.ATLAS_URI;
+// 	// Create a new MongoClient
+// 	const client = new MongoClient(uri);
+// 	try {
+// 		// Connect the client to the server
+// 		await client.connect();
+// 		database = await client.db(process.env.DATABASE);
+// 		// Establish and verify connection
+// 		console.log("db connected");
+// 	} catch (error) {
+// 		throw Error("Could not connect to MongoDB. " + error);
+// 	}
+// }
+// function db() {
+// 	return database;
+// }
+// module.exports = {
+// 	mongoConnect,
+// 	db,
+// };
+const mongoose = require("mongoose");
+mongoose.set('strictQuery', false);
+const mongoDB = process.env.ATLAS_URI;
+async function mongooseConnect(){
+    try{
+        await mongoose.connect(mongoDB);
+        console.log('Connected to mongoDB through mongoose');
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+module.exports = {
+    mongooseConnect
+}
